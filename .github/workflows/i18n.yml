@@ -1,0 +1,30 @@
+name: i18n
+
+on:
+  push:
+    paths:
+      - "app/locales/**"
+      - "app/i18n.py"
+      - "tools/check_i18n.py"
+      - ".github/workflows/i18n.yml"
+  pull_request:
+    paths:
+      - "app/locales/**"
+      - "app/i18n.py"
+      - "tools/check_i18n.py"
+      - ".github/workflows/i18n.yml"
+
+jobs:
+  check:
+    name: 检查语言文件
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # check_i18n 只依赖标准库（app.i18n 不引入 Qt），不需要装 PySide6
+      - name: 一致性检查
+        run: python tools/check_i18n.py --strict

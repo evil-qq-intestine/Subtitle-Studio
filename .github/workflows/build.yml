@@ -1,0 +1,67 @@
+name: Build
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: 打包 Windows
+    runs-on: windows-latest
+
+    env:
+      # 没配这两个 secret 也能跑，只是产物不签名（sign.ps1 会自动跳过）
+      SIGN_PFX_BASE64: ${{ secrets.SIGN_PFX_BASE64 }}
+      SIGN_PFX_PASSWORD: ${{ secrets.SIGN_PFX_PASSWORD }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: 安装依赖
+        run: pip install -r requirements.txt pyinstaller
+
+      - name: 准备签名证书
+        shell: pwsh
+        run: |
+          if (-not $env:SIGN_PFX_BASE64) {
+            Write-Host "未配置 SIGN_PFX_BASE64，跳过签名"
+            exit 0
+          }
+          $pfx = Join-Path $env:RUNNER_TEMP "cert.pfx"
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:SIGN_PFX_BASE64))
+          "SIGN_PFX_PATH=$pfx" >> $env:GITHUB_ENV
+
+      - name: 构建
+        run: .\build.ps1 -Sign
+
+      - name: 校验产物
+        shell: pwsh
+        run: |
+          $msi = "installer\Subtitle Studio.msi"
+          if (-not (Test-Path $msi)) { throw "没有生成 MSI" }
+          "$([math]::Round((Get-Item $msi).Length/1MB,1)) MB" | Write-Host
+          Get-AuthenticodeSignature $msi | Select-Object Status | Format-List
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SubtitleStudio-windows
+          path: |
+            installer/Subtitle Studio.msi
+            dist/Subtitle Studio/**
+          if-no-files-found: error
+
+      - name: 发布 Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: installer/Subtitle Studio.msi
+          generate_release_notes: true

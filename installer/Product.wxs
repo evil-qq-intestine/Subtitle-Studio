@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+
+  <Product Id="*"
+           Name="Subtitle Studio"
+           Language="1033"
+           Version="1.0.0"
+           Manufacturer="Subtitle Studio"
+           UpgradeCode="8E0B6D2C-4C1F-4E7A-9B3A-7C5D2F1A6E44">
+
+    <Package InstallerVersion="500"
+             Compressed="yes"
+             InstallScope="perMachine"
+             Description="Video subtitle translator"
+             Comments="Fetch video subtitles and translate them" />
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of Subtitle Studio is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Property Id="ARPPRODUCTICON" Value="AppIcon" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/" />
+
+    <Icon Id="AppIcon" SourceFile="..\assets\app.ico" />
+    <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+    <WixVariable Id="WixUIBannerBmp" Value="..\assets\banner.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="..\assets\dialog.bmp" />
+
+    <!-- 目录结构 -->
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLDIR" Name="Subtitle Studio" />
+      </Directory>
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="AppMenuDir" Name="Subtitle Studio" />
+      </Directory>
+      <Directory Id="DesktopFolder" />
+    </Directory>
+
+    <!-- 快捷方式 -->
+    <DirectoryRef Id="AppMenuDir">
+      <Component Id="StartMenuShortcut" Guid="*">
+        <Shortcut Id="StartMenuLink"
+                  Name="Subtitle Studio"
+                  Description="Video subtitle translator"
+                  Target="[INSTALLDIR]Subtitle Studio.exe"
+                  WorkingDirectory="INSTALLDIR"
+                  Icon="AppIcon" />
+        <RemoveFolder Id="RemoveAppMenuDir" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\SubtitleStudio"
+                       Name="installed" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <DirectoryRef Id="DesktopFolder">
+      <Component Id="DesktopShortcut" Guid="*">
+        <Shortcut Id="DesktopLink"
+                  Name="Subtitle Studio"
+                  Description="Video subtitle translator"
+                  Target="[INSTALLDIR]Subtitle Studio.exe"
+                  WorkingDirectory="INSTALLDIR"
+                  Icon="AppIcon" />
+        <RegistryValue Root="HKCU" Key="Software\SubtitleStudio"
+                       Name="desktop" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <Feature Id="MainFeature" Title="Subtitle Studio" Level="1" Display="expand">
+      <ComponentGroupRef Id="AppFiles" />
+      <ComponentRef Id="StartMenuShortcut" />
+      <ComponentRef Id="DesktopShortcut" />
+    </Feature>
+
+    <UIRef Id="WixUI_InstallDir" />
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+  </Product>
+</Wix>
+

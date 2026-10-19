@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    name: 检查
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: 安装依赖
+        run: pip install -r requirements.txt
+
+      - name: 语法检查
+        run: python -m compileall -q app main.py
+
+      - name: 语言文件一致性
+        run: python tools/check_i18n.py --strict
+
+      - name: 界面冒烟
+        run: python tools/smoke_ui.py

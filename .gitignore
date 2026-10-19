@@ -1,0 +1,35 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# ---- 构建产物 ----
+build/
+dist/
+wheels/
+*.spec
+installer/obj/
+*.wixobj
+*.wixpdb
+installer/preview.msi
+
+# 分发包走 Release，不进仓库
+*.msi
+dist/
+
+# ---- 测试输出 ----
+tools/cache.db
+tools/fixtures/out*/
+tools/fixtures/sample.mp4
+tools/fixtures/*.vtt
+tools/fixtures/sample.*.srt
+
+# ---- 编辑器 / 系统 ----
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log

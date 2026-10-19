@@ -1,0 +1,20 @@
+# 默认自动识别文本，换行统一成各平台习惯
+* text=auto
+
+*.py     text eol=lf
+*.json   text eol=lf
+*.md     text eol=lf
+*.yml    text eol=lf
+*.sh     text eol=lf
+*.ps1    text eol=crlf
+*.wxs    text eol=lf
+*.wxl    text eol=lf
+*.rtf    text eol=crlf
+*.txt    text eol=lf
+
+# 二进制，别做换行转换
+*.png    binary
+*.ico    binary
+*.bmp    binary
+*.exe    binary
+*.mp4    binary
