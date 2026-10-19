@@ -88,6 +88,10 @@ def run_cli(args: argparse.Namespace) -> int:
 
 
 def main() -> int:
+    from app.i18n import setup_console
+
+    setup_console()          # 中文日志在 cp1252 控制台（如 CI）上会直接抛异常
+
     parser = argparse.ArgumentParser(description="Subtitle Studio")
     parser.add_argument("--cli", metavar="SOURCE", help="命令行模式：URL 或本地视频")
     parser.add_argument("--model", help="Ollama 模型名")

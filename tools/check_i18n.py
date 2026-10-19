@@ -55,6 +55,7 @@ def mentioned_keys() -> set[str]:
 
 
 def main() -> int:
+    i18n.setup_console()
     strict = "--strict" in sys.argv
     if not i18n.LANGUAGES:
         print("找不到任何语言文件（app/locales/*.json）")
@@ -110,3 +111,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

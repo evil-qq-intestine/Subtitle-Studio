@@ -23,6 +23,28 @@ Lang = str
 REFERENCE = "zh"          # 缺失键时的兜底语言
 
 
+def setup_console() -> None:
+    """让中文能安全地打到控制台。
+
+    Windows 上标准输出默认用本地代码页：中文系统是 cp936，英文 CI（GitHub Actions）
+    是 cp1252 —— 后者遇到中文直接抛 UnicodeEncodeError。
+
+    策略：
+      * 输出被重定向（管道 / CI）时，强制 UTF-8，让日志按 UTF-8 正确解码；
+      * 交互式终端保持原编码，只把错误策略改成 replace，避免少数生僻字把程序打挂。
+    """
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            if stream is None:            # pythonw 下 stdout 可能是 None
+                continue
+            if stream.isatty():
+                stream.reconfigure(errors="replace")
+            else:
+                stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError, OSError):
+            pass
+
+
 def _locales_dirs() -> List[Path]:
     """兼容源码运行和 PyInstaller 打包（onedir 下资源在 _internal 里）。"""
     here = Path(__file__).resolve().parent

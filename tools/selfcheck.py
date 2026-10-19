@@ -6,10 +6,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.config import Settings
 from app.core import backends, env, pipeline, subs
+from app.i18n import setup_console
 from app.ui import main_window, settings as ui_settings, theme, widgets  # noqa: F401
 
 
 def main() -> int:
+    setup_console()
     s = Settings.load()
     print("配置路径:", Path.home())
     print("工作目录:", s.workdir)
@@ -44,3 +46,5 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+

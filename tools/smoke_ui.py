@@ -17,12 +17,13 @@ sys.path.insert(0, str(ROOT))
 from PySide6.QtWidgets import QApplication  # noqa: E402
 
 from app.config import Settings  # noqa: E402
-from app.i18n import LANGUAGES, get_language, set_language  # noqa: E402
+from app.i18n import LANGUAGES, get_language, set_language, setup_console  # noqa: E402
 from app.ui.main_window import MainWindow  # noqa: E402
 from app.ui.settings import SettingsDialog  # noqa: E402
 
 
 def main() -> int:
+    setup_console()
     app = QApplication(sys.argv)  # noqa: F841
 
     original = get_language()
@@ -62,3 +63,5 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+

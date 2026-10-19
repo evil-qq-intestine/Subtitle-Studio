@@ -8,6 +8,9 @@ jobs:
   check:
     name: 检查
     runs-on: windows-latest
+
+    env:
+      PYTHONUTF8: "1"
     steps:
       - uses: actions/checkout@v4
 
@@ -27,3 +30,4 @@ jobs:
 
       - name: 界面冒烟
         run: python tools/smoke_ui.py
+

@@ -17,6 +17,8 @@ jobs:
       # 没配这两个 secret 也能跑，只是产物不签名（sign.ps1 会自动跳过）
       SIGN_PFX_BASE64: ${{ secrets.SIGN_PFX_BASE64 }}
       SIGN_PFX_PASSWORD: ${{ secrets.SIGN_PFX_PASSWORD }}
+      # 确保脚本里的中文日志按 UTF-8 输出，别被 runner 的 cp1252 卡住
+      PYTHONUTF8: "1"
 
     steps:
       - uses: actions/checkout@v4
@@ -65,3 +67,4 @@ jobs:
         with:
           files: installer/Subtitle Studio.msi
           generate_release_notes: true
+
