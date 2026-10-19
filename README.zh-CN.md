@@ -27,7 +27,7 @@ YouTube 自带的「自动翻译」字幕走 `api/timedtext?...&tlang=` 接口�
 - **下载参数**：浏览器 Cookie、TLS 指纹伪装、任意额外 yt-dlp 参数。
 - **完整 i18n**：简体中文 / English，或跟随系统；切换即时生效，不用重启。
 - **可配置输出目录**；字幕与视频同名，播放器会自动加载。
-- **先合并句子再翻译**（[原因](docs/DEVELOPMENT.md#two-implementation-notes)）——把 2 秒一条的碎片直接丢给模型会翻出很离谱的东西。
+- **先合并句子再翻译**——把 2 秒一条的碎片直接丢给模型会翻出很离谱的东西。
 - 任务队列、实时进度、随时取消、一键打开目录。
 
 ## 环境要求
@@ -49,8 +49,9 @@ YouTube 自带的「自动翻译」字幕走 `api/timedtext?...&tlang=` 接口�
 > **未签名的构建。** SmartScreen 会提示「Windows 已保护你的电脑」，点 **更多信息**，再点
 > **仍要运行**。安装到 `C:\Program Files\Subtitle Studio`，创建开始菜单和桌面快捷方式。
 > 想彻底去掉提示需要代码签名证书（OV 证书约 $150–300/年），或者申请
-> [SignPath Foundation](https://signpath.io) 的免费开源签名。两种方案都写在
-> [开发文档](docs/DEVELOPMENT.md#code-signing)里。
+> [SignPath Foundation](https://signpath.io) 的免费开源签名。
+
+![安装向导](docs/installer.png)
 
 ### 从源码运行
 
@@ -133,7 +134,7 @@ python main.py --cli "URL" --api-base https://api.deepseek.com/v1 --api-key sk-.
 
 ## 参与贡献
 
-- [开发文档](docs/DEVELOPMENT.md) —— 目录结构、构建 MSI、代码签名、CI。
 - **翻译**：`app/locales/` 下一个语言一个 JSON 文件，不用改代码。开 PR 前先跑
   `python tools/check_i18n.py --strict`。
+
 

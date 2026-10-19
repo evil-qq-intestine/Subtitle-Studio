@@ -92,10 +92,13 @@ def main() -> int:
         x += s * 4 + 12
     p.drawImage(x, 14, paint_icon(256))
     p.end()
-    strip.save(str(OUT / "preview-strip.png"), "PNG")
-    print(f"ok {OUT / 'preview-strip.png'}")
+    build_dir = ROOT / "build"
+    build_dir.mkdir(exist_ok=True)
+    strip.save(str(build_dir / "preview-strip.png"), "PNG")
+    print("ok build/preview-strip.png")
     return 0
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

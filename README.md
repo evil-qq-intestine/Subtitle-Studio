@@ -27,7 +27,7 @@ The original-language caption track, however, works fine. So instead of asking Y
 - **Download options**: browser cookies, TLS fingerprint impersonation, arbitrary extra yt-dlp arguments.
 - **Full i18n**: Simplified Chinese / English, or follow the system; switches instantly, no restart.
 - **Configurable output folder**; files are named after the video so players load them automatically.
-- **Sentence-level merging** before translation (see [why](docs/DEVELOPMENT.md#two-implementation-notes)) — translating 2-second caption fragments produces garbage.
+- **Sentence-level merging** before translation — translating 2-second caption fragments produces garbage.
 - Task queue with live progress, cancel anytime, one-click "open folder".
 
 ## Requirements
@@ -50,8 +50,9 @@ Download `Subtitle Studio.msi` from [Releases](../../releases) and run it.
 > **Run anyway**. The MSI installs to `C:\Program Files\Subtitle Studio` and creates Start Menu
 > and desktop shortcuts. Removing the warning entirely requires a code signing certificate
 > (an OV certificate is roughly $150–300/year) or free signing for open-source projects via
-> [SignPath Foundation](https://signpath.io). Both are covered in the
-> [development guide](docs/DEVELOPMENT.md#code-signing).
+> [SignPath Foundation](https://signpath.io).
+
+![Windows installer](docs/installer.png)
 
 ### Run from source
 
@@ -134,7 +135,7 @@ Useful flags: `--no-video` (subtitles only), `--quality 720`, `--proxy`, `--work
 
 ## Contributing
 
-- [Development guide](docs/DEVELOPMENT.md) — project layout, building the MSI, code signing, CI.
 - **Translations**: one JSON file per language in `app/locales/`, no code changes. Run
   `python tools/check_i18n.py --strict` before opening a PR.
+
 

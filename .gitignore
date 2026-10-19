@@ -33,3 +33,11 @@ Thumbs.db
 .vscode/
 .idea/
 *.log
+
+# 个人维护笔记，不入库
+docs/DEVELOPMENT.md
+
+# 生成物：build.ps1 / tools/make_*.py 会自动重建
+assets/*.ico
+assets/*.bmp
+assets/*.png
