@@ -31,6 +31,13 @@ jobs:
       - name: 安装依赖
         run: pip install -r requirements.txt pyinstaller
 
+      # WiX 只有 39MB，但每次 runner 都是干净的，不缓存就得重下
+      - name: 缓存 WiX 工具链
+        uses: actions/cache@v4
+        with:
+          path: build/wix
+          key: wix-3.14.1-${{ runner.os }}
+
       - name: 准备签名证书
         shell: pwsh
         run: |
