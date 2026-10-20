@@ -53,6 +53,7 @@ class TaskCard(QFrame):
 
     cancelRequested = Signal(str)
     openRequested = Signal(str)
+    retryRequested = Signal(str)
 
     def __init__(self, task_id: str, title: str, subtitle: str = "",
                  parent: QWidget | None = None):
@@ -85,7 +86,15 @@ class TaskCard(QFrame):
         self.cancel_btn.setObjectName("Ghost")
         self.cancel_btn.setCursor(Qt.PointingHandCursor)
         self.cancel_btn.clicked.connect(lambda: self.cancelRequested.emit(self.task_id))
+
+        self.retry_btn = QPushButton(tr("task.retry"))
+        self.retry_btn.setObjectName("Ghost")
+        self.retry_btn.setCursor(Qt.PointingHandCursor)
+        self.retry_btn.clicked.connect(lambda: self.retryRequested.emit(self.task_id))
+        self.retry_btn.setVisible(False)
+
         top.addWidget(self.open_btn, 0, Qt.AlignTop)
+        top.addWidget(self.retry_btn, 0, Qt.AlignTop)
         top.addWidget(self.cancel_btn, 0, Qt.AlignTop)
         root.addLayout(top)
 
@@ -121,6 +130,7 @@ class TaskCard(QFrame):
         self.set_progress(1.0)
         self.bar.setStyleSheet("QProgressBar::chunk{background:%s;border-radius:4px;}" % theme.OK)
         self.cancel_btn.setVisible(False)
+        self.retry_btn.setVisible(False)
         if folder:
             self.open_btn.setVisible(True)
 
@@ -131,6 +141,7 @@ class TaskCard(QFrame):
         self.status_label.setStyleSheet(f"color:{theme.ERR};")
         self.bar.setStyleSheet("QProgressBar::chunk{background:%s;border-radius:4px;}" % theme.ERR)
         self.cancel_btn.setVisible(False)
+        self.retry_btn.setVisible(True)
 
     def cancelled(self) -> None:
         self._state = "idle"
@@ -138,14 +149,28 @@ class TaskCard(QFrame):
         self.status_label.setText(tr("task.cancelled_body"))
         self.bar.setStyleSheet("")
         self.cancel_btn.setVisible(False)
+        self.retry_btn.setVisible(True)
 
     def running(self) -> None:
         self._state = "run"
         self.badge.set_state("run", tr("task.running"))
+        self.retry_btn.setVisible(False)
+        self.cancel_btn.setVisible(True)
+
+    def reset_for_retry(self) -> None:
+        """重试用：把卡片恢复到刚开始跑的样子。"""
+        self.status_label.setStyleSheet("")
+        self.status_label.setText(tr("task.queued"))
+        self.bar.setStyleSheet("")
+        self.set_progress(0)
+        self.open_btn.setVisible(False)
+        self.retry_btn.setVisible(False)
+        self.running()
 
     def retranslate(self) -> None:
         self.open_btn.setText(tr("common.open_folder"))
         self.cancel_btn.setText(tr("task.cancel"))
+        self.retry_btn.setText(tr("task.retry"))
         if self._state == "run":
             self.badge.set_state("run", tr("task.running"))
         elif self._state == "ok":
@@ -228,3 +253,4 @@ def divider() -> QFrame:
     line.setObjectName("Divider")
     line.setFixedHeight(1)
     return line
+

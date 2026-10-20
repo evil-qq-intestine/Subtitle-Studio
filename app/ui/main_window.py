@@ -152,9 +152,10 @@ class MainWindow(QMainWindow):
     def __init__(self, settings: Settings):
         super().__init__()
         self.s = settings
-        self.tasks: dict[str, tuple[JobThread, TaskCard]] = {}
+        self.tasks: dict[str, JobThread] = {}          # 正在跑的线程
+        self.cards: dict[str, TaskCard] = {}           # 所有任务卡（跑完也留着，方便重试）
+        self.specs: dict[str, JobSpec] = {}            # 每个任务的原始参数
         self._bootstrap: BootstrapThread | None = None
-        self._pages: list[TaskCard] = []
 
         self.resize(1060, 780)
         self.setMinimumSize(880, 640)
@@ -470,43 +471,57 @@ class MainWindow(QMainWindow):
         tid = uuid.uuid4().hex[:10]
         card = TaskCard(tid, self._short(title), subtitle)
         card.cancelRequested.connect(self._cancel_task)
+        card.retryRequested.connect(self._retry_task)
         card.openRequested.connect(open_in_explorer)
 
         self.task_layout.insertWidget(self.task_layout.count() - 1, card)
+        self.cards[tid] = card
+        self.specs[tid] = spec
+        self._launch(tid, spec, card)
         self.scroll.verticalScrollBar().setValue(
             self.scroll.verticalScrollBar().maximum())
 
+    def _launch(self, tid: str, spec: JobSpec, card: TaskCard) -> None:
         thread = JobThread(self.s, spec)
         thread.sig_status.connect(lambda m, t=tid: self._on_status(t, m))
         thread.sig_progress.connect(lambda v, t=tid: self._on_progress(t, v))
         thread.sig_done.connect(lambda r, t=tid: self._on_done(t, r))
         thread.sig_fail.connect(lambda m, t=tid: self._on_fail(t, m))
         thread.finished.connect(lambda t=tid: self.tasks.pop(t, None))
-        self.tasks[tid] = (thread, card)
-        self._pages.append(card)
+        self.tasks[tid] = thread
         card.running()
         self._update_empty()
         thread.start()
 
+    def _retry_task(self, tid: str) -> None:
+        """失败/取消的任务重新跑一遍（用同样的参数）。"""
+        spec = self.specs.get(tid)
+        card = self.cards.get(tid)
+        if spec is None or card is None:
+            return
+        running = self.tasks.get(tid)
+        if running is not None and running.isRunning():
+            return
+        card.reset_for_retry()
+        self._launch(tid, spec, card)
     def _short(self, text: str, limit: int = 64) -> str:
         return text if len(text) <= limit else text[: limit - 1] + "…"
 
     # ------------------------------------------------------------ 回调
     def _on_status(self, tid: str, message: str) -> None:
-        item = self.tasks.get(tid)
-        if item:
-            item[1].set_status(message)
+        card = self.cards.get(tid)
+        if card:
+            card.set_status(message)
 
     def _on_progress(self, tid: str, ratio: float) -> None:
-        item = self.tasks.get(tid)
-        if item:
-            item[1].set_progress(ratio)
+        card = self.cards.get(tid)
+        if card:
+            card.set_progress(ratio)
 
     def _on_done(self, tid: str, result: JobResult) -> None:
-        item = self.tasks.get(tid)
-        if not item:
+        card = self.cards.get(tid)
+        if card is None:
             return
-        card = item[1]
         card.set_title(result.title)
         folder = str(result.subtitle_files[0].parent) if result.subtitle_files else ""
         parts = [tr("task.summary", cues=result.cue_count), f"{result.seconds:.0f}s"]
@@ -515,19 +530,21 @@ class MainWindow(QMainWindow):
         card.finish(folder, "  ·  ".join(parts))
 
     def _on_fail(self, tid: str, message: str) -> None:
-        item = self.tasks.get(tid)
-        if not item:
+        card = self.cards.get(tid)
+        if card is None:
             return
         if message == "__cancelled__":
-            item[1].cancelled()
+            card.cancelled()
         else:
-            item[1].fail(message)
+            card.fail(message)
 
     def _cancel_task(self, tid: str) -> None:
-        item = self.tasks.get(tid)
-        if item:
-            item[1].set_status(tr("task.cancelling"))
-            item[0].cancel()
+        thread = self.tasks.get(tid)
+        card = self.cards.get(tid)
+        if card:
+            card.set_status(tr("task.cancelling"))
+        if thread:
+            thread.cancel()
 
     # ------------------------------------------------------------ 设置
     def _open_settings(self) -> None:
@@ -586,7 +603,7 @@ class MainWindow(QMainWindow):
             self.fmt_combo.setItemText(best_index, "Best" if get_language() == "en" else "最高")
 
         self.drop.retranslate()
-        for card in self._pages:
+        for card in self.cards.values():
             card.retranslate()
         self._refresh_engine_chip()
 
@@ -605,7 +622,7 @@ class MainWindow(QMainWindow):
 
     # ------------------------------------------------------------ 关闭
     def closeEvent(self, event) -> None:  # noqa: N802
-        running = [t for t, _ in self.tasks.values() if t.isRunning()]
+        running = [t for t in self.tasks.values() if t.isRunning()]
         if running:
             reply = QMessageBox.question(
                 self, tr("msg.quitting_title"),
@@ -622,5 +639,7 @@ class MainWindow(QMainWindow):
                     t.wait(1500)
         self.s.save()
         event.accept()
+
+
 
 

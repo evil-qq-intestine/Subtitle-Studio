@@ -159,6 +159,7 @@
     "task.failed": "失败",
     "task.preparing": "准备中",
     "task.queued": "排队中…",
+    "task.retry": "重试",
     "task.running": "进行中",
     "task.summary": "{cues} 条字幕",
     "task.summary_video": "视频已下载"

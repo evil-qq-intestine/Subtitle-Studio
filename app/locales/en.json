@@ -159,6 +159,7 @@
     "task.failed": "Failed",
     "task.preparing": "Preparing",
     "task.queued": "Queued…",
+    "task.retry": "Retry",
     "task.running": "Running",
     "task.summary": "{cues} subtitles",
     "task.summary_video": "Video downloaded"

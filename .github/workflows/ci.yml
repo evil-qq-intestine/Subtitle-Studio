@@ -31,3 +31,6 @@ jobs:
       - name: 界面冒烟
         run: python tools/smoke_ui.py
 
+      - name: 失败任务重试
+        run: python tools/test_retry.py
+
