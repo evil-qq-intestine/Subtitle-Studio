@@ -53,6 +53,31 @@ if (-not $SkipApp) {
     & python @pyArgs
     if ($LASTEXITCODE -ne 0) { throw 'PyInstaller 失败' }
 
+    # --exclude-module 只挡 Python 模块，PySide6 的 hook 仍然会把一堆
+    # 用不到的 Qt DLL 拷进来。应用只用 Core/Gui/Widgets，这里按名字删掉。
+    $prune = @(
+        'opengl32sw.dll',        # 软件 OpenGL 兜底，20MB，纯 widgets 用不到
+        'Qt6Quick.dll', 'Qt6Qml.dll', 'Qt6QmlModels.dll', 'Qt6QmlWorkerScript.dll',
+        'Qt6QuickWidgets.dll', 'Qt6QuickControls2.dll',
+        'Qt6OpenGL.dll', 'Qt6OpenGLWidgets.dll',
+        'Qt6Network.dll', 'Qt6Svg.dll', 'Qt6Multimedia.dll', 'Qt6DBus.dll',
+        'Qt6Charts.dll', 'Qt6Pdf.dll', 'Qt6WebEngineCore.dll'
+    )
+    $qtDir = Join-Path $root 'dist\Subtitle Studio\_internal\PySide6'
+    $freed = 0
+    if (Test-Path $qtDir) {
+        foreach ($name in $prune) {
+            $f = Join-Path $qtDir $name
+            if (Test-Path $f) {
+                $freed += (Get-Item $f).Length
+                Remove-Item $f -Force
+            }
+        }
+        if ($freed -gt 0) {
+            Write-Host ("裁掉用不到的 Qt 组件: {0:N1} MB" -f ($freed / 1MB)) -ForegroundColor Cyan
+        }
+    }
+
     if ($Sign) {
         Write-Host "== 签名 exe ==" -ForegroundColor Cyan
         & pwsh -NoProfile -ExecutionPolicy Bypass -File $signScript -Files $exe
