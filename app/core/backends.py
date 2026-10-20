@@ -16,6 +16,7 @@ from typing import Callable
 
 from ..config import Settings
 from ..i18n import tr
+from .env import find_ollama
 
 Log = Callable[[str], None]
 
@@ -178,6 +179,67 @@ LOCAL_ENDPOINTS = [
     ("llama.cpp", "http://127.0.0.1:8080/v1", "openai"),
     ("vLLM", "http://127.0.0.1:8000/v1", "openai"),
 ]
+
+
+def start_ollama(settings: Settings, log: Log | None = None,
+                 timeout: float = 30.0) -> bool:
+    """Ollama 没在跑就尝试拉起来。
+
+    只对本机地址生效（远端 Ollama 我们没法启动它）。启动失败就返回 False，
+    由调用方决定是报错还是继续等。
+    """
+    import os
+    import subprocess
+    import sys
+    import time
+
+    if not _is_local(urllib.parse.urlparse(settings.ollama_url).hostname or ""):
+        return False
+
+    if probe_ollama(settings.ollama_url, timeout=1.5) is not None:
+        return True
+
+    exe = find_ollama()
+    if exe is None:
+        if log:
+            log(tr("st.ollama_not_found"))
+        return False
+
+    if log:
+        log(tr("st.ollama_starting", path=str(exe)))
+
+    kwargs: dict = {}
+    if sys.platform.startswith("win"):
+        # DETACHED_PROCESS：应用退出后 Ollama 继续跑，下次不用再拉
+        kwargs["creationflags"] = (getattr(subprocess, "CREATE_NO_WINDOW", 0)
+                                   | getattr(subprocess, "DETACHED_PROCESS", 0))
+    else:
+        kwargs["start_new_session"] = True
+    try:
+        subprocess.Popen(
+            [str(exe), "serve"],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            env=os.environ.copy(),
+            **kwargs,
+        )
+    except OSError as exc:
+        if log:
+            log(tr("st.ollama_start_failed", err=exc))
+        return False
+
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if probe_ollama(settings.ollama_url, timeout=1.5) is not None:
+            if log:
+                log(tr("st.ollama_ready"))
+            return True
+        time.sleep(0.8)
+
+    if log:
+        log(tr("st.ollama_timeout"))
+    return False
 
 MODEL_HINTS = ("mt", "translate", "翻译", "hy-mt", "hunyuan", "qwen", "gemma", "saiga")
 

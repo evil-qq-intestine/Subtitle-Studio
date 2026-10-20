@@ -20,6 +20,7 @@ from typing import Callable, Optional
 from ..config import Settings
 from ..i18n import tr
 from . import subs
+from . import backends
 from .backends import build_translator
 from .env import ensure_ytdlp, find_ffmpeg
 
@@ -404,6 +405,11 @@ class Pipeline:
 
         translator = build_translator(self.s)
         ok, detail = translator.test()
+        if not ok and self.s.backend == "ollama":
+            # 和 yt-dlp 一样：缺了就自己拉起来，而不是让用户去开终端
+            self.status(tr("st.engine_waking"))
+            if backends.start_ollama(self.s, self.log):
+                ok, detail = translator.test()
         if not ok:
             raise PipelineError(tr("err.engine_down", err=detail))
         max_chars = self.s.max_chars or subs.default_max_chars(self.s.target_lang)
@@ -437,6 +443,7 @@ class Pipeline:
 
         self.log(tr("st.output", name=full_srt.name))
         return [full_vtt, full_srt], len(out_cues)
+
 
 
 

@@ -64,16 +64,23 @@ class BootstrapThread(QThread):
 
     def run(self) -> None:  # noqa: D401
         info: dict = {}
-        # 首次启动：本地有 Ollama 就自动挑一个模型
-        if self.s.backend == "ollama" and not self.s.ollama_model:
+        if self.s.backend == "ollama":
+            # Ollama 没在跑就先拉起来，省得用户第一次用时一脸问号
             try:
-                self.sig_status.emit(tr("main.engine_detecting"))
-                models = backends.probe_ollama(self.s.ollama_url)
-                if models:
-                    self.s.ollama_model = backends.pick_model(models)
-                    self.s.save()
+                self.sig_status.emit(tr("st.engine_waking"))
+                backends.start_ollama(self.s, log=lambda m: self.sig_status.emit(m))
             except Exception:  # noqa: BLE001
                 pass
+            # 首次启动：本地有 Ollama 就自动挑一个模型
+            if not self.s.ollama_model:
+                try:
+                    self.sig_status.emit(tr("main.engine_detecting"))
+                    models = backends.probe_ollama(self.s.ollama_url)
+                    if models:
+                        self.s.ollama_model = backends.pick_model(models)
+                        self.s.save()
+                except Exception:  # noqa: BLE001
+                    pass
         try:
             self.sig_status.emit(tr("st.tools"))
             path = toolenv.ensure_ytdlp(

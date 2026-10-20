@@ -167,6 +167,32 @@ def ffmpeg_dir(ffmpeg: Optional[Path]) -> Optional[str]:
     return str(ffmpeg.parent) if ffmpeg else None
 
 
+def find_ollama() -> Optional[Path]:
+    """找 Ollama 可执行文件。找不到就返回 None。"""
+    found = shutil.which("ollama") or shutil.which("ollama.exe")
+    if found:
+        return Path(found)
+
+    cands: list[Path] = []
+    local_appdata = os.environ.get("LOCALAPPDATA")
+    if local_appdata:
+        cands.append(Path(local_appdata) / "Programs" / "Ollama" / "ollama.exe")
+    cands += [
+        Path(r"C:\Program Files\Ollama\ollama.exe"),
+        Path("/usr/local/bin/ollama"),
+        Path("/usr/bin/ollama"),
+        Path("/opt/homebrew/bin/ollama"),
+        Path("/Applications/Ollama.app/Contents/Resources/ollama"),
+    ]
+    for c in cands:
+        try:
+            if c.is_file():
+                return c
+        except OSError:
+            continue
+    return None
+
+
 def detect_local_proxy() -> str:
     """扫一下本机常见的代理端口，省得用户第一次手动填。"""
     import socket
